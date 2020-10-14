@@ -1,5 +1,7 @@
 #include "Arduino.h"
 #include "XInput.h"
+#include "timerUtils.h"
+
 
 #define MOVERS_AMOUNT 2 //How many movers are connected
 
@@ -7,6 +9,7 @@
 #define START_MOVEMENT = MIN_Y
 #define MIN_X 4000
 #define INCREMENT 500 //How much to add when there is a greater motion than the old one
+#define COUNTDOWN_STOP 2000     //2 sec to let it stop completely
 
 
 /* To test stuff without using the XInput library*/
@@ -15,7 +18,10 @@
 class XinputMovement
 {
 private:
+
+
     bool isMoving; //Becomes true only when all the movers are in sync and moving
+    MiniCountdown isMovingCountdown;
 
     int16_t motions[2] = {0, 0}; //Declares an array where our values are stored for the Xinput lib to use
     bool manageSingleMotion(int16_t motion, uint8_t id);

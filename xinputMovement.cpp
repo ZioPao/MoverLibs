@@ -9,8 +9,6 @@ XinputMovement::XinputMovement()
 
     XInput.begin();
     isMoving = false;
-
-    
 }
 //////////////////////////////////////////////////////
 //PRIVATE METHODS
@@ -90,10 +88,31 @@ bool XinputMovement::manageSingleMotion(int16_t motion, uint8_t id)
 
 void XinputMovement::manageMotions(int16_t motion1, int16_t motion2)
 {
+    bool prevIsMoving = isMoving;
     //Using a single && line doesn't work, dunno why and I don't care tbh
-    bool tmp1, tmp2;
-    tmp1 = manageSingleMotion(motion1, 0);
-    tmp2 = manageSingleMotion(motion2, 1);
+    bool mot1, mot2;
+    mot1 = manageSingleMotion(motion1, 0);
+    mot2 = manageSingleMotion(motion2, 1);
 
-    isMoving = tmp1 && tmp2;
+    isMoving = mot1 && mot2;
+
+    /*
+     *  If it stopped moving, starts a timer and check if it should forcefully stop or not,
+     *  so it checks if the countdown is running while isMoving is false
+     */
+    if (isMovingCountdown.getStatus() && !isMoving)
+    {
+        //when it reaches 0, it stops all the movements
+        if (isMovingCountdown.update())
+        {
+
+            XInput.setJoystickY(JOY_LEFT, 0);
+        }
+    }
+    else if (!isMoving && prevIsMoving)
+    {
+        //If it was moving before and now it stopped, start the timer
+
+        isMovingCountdown.start(COUNTDOWN_STOP);
+    }
 }
