@@ -17,7 +17,7 @@ XinputMovement::XinputMovement()
 /** Manage movement for a single motion value.
  * @param motion 16 bit value of y axis motion
  * @param id integer to design a single mover
- * @return True if managed, false if not manageable. Defines isMoving value.
+ * @return True if managed, false if not manageable.
  */
 bool XinputMovement::manageSingleMotion(int16_t motion, uint8_t id)
 {
@@ -67,37 +67,34 @@ void XinputMovement::manageMotions(int16_t motion1, int16_t motion2)
 
     if (isMoving)
     {
-
+        //if the countdown was active, it'll stop it forcefully
         isMovingCountdown.stop();
 
         int16_t tmpValue = 0;
-
         for (int x : motions)
         {
             tmpValue += x;
         }
-        XInput.setJoystickY(JOY_LEFT, tmpValue * 2); //Incrementa velocità
+        tmpValue *= 2;  //! Non ottimale, principalmente per test
+        XInput.setJoystickY(JOY_LEFT, (uint16_t)tmpValue); 
     }
-
-    /*
-     *  If it stopped moving, starts a timer and check if it should forcefully stop or not,
-     *  so it checks if the countdown is running while isMoving is false
-     */
-    if (isMovingCountdown.getStatus() && !isMoving)
+    else
     {
-        //when it reaches 0, it stops all the movements
-        if (isMovingCountdown.update())
+        /*
+        *  If it stopped moving, starts a timer and check if it should forcefully stop or not,
+        *  so it checks if the countdown is running while isMoving is false
+        */
+        if (isMovingCountdown.getStatus())
         {
             digitalWrite(17, LOW);
-
             XInput.setJoystickY(JOY_LEFT, 0);
             digitalWrite(17, HIGH);
         }
-    }
-    else if (!isMoving && prevIsMoving)
-    {
-        //If it was moving before and now it stopped, start the timer
+        else if (prevIsMoving)
+        {
+            //If it was moving before and now it stopped, start the timer
 
-        isMovingCountdown.start(COUNTDOWN_STOP);
+            isMovingCountdown.start(COUNTDOWN_STOP);
+        }
     }
 }
