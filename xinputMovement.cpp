@@ -21,65 +21,34 @@ XinputMovement::XinputMovement()
  */
 bool XinputMovement::manageSingleMotion(int16_t motion, uint8_t id)
 {
+    bool isManageable;
+    int16_t lastValue = motions[id]; //Last value to compare it to the newest one
 
-    //Initial check
+    //! it's still overflowing!
+    //TODO add upper bound
 
-    //isMoving becomes true only when both of motions are executed and true
-
+    //isMoving becomes true only when both of motions are managed
     if (abs(motion) >= MIN_Y)
     {
+        isManageable = true;
 
-        int16_t lastValue = motions[id]; //Last value to compare it to the newest one
-
-        //  Three possible cases
-
-        /* 1) Currently moving, and new motions is bigger than the last one*/
-        if (isMoving && abs(motion) > abs(lastValue))
+        if (abs(motion) > abs(lastValue))
         {
-#ifdef DEBUG
-            Serial.println("1° case, changed value");
-#endif
-            motions[id] = motions[id] + INCREMENT; //Saves the new value
+            motions[id] = motions[id] + INCREMENT;
         }
-        /* 2) Not moving currently, so we need to "force it" at first*/
-        else if (!isMoving)
-        {
-            motions[id] = MIN_Y;
-        }
-        /* 3) Movement should be stopped */
         else
         {
-            motions[id] = 0;
+            motions[id] = motions[id] - DECREMENT;
         }
-
-#ifndef DEBUG
-        if (isMoving)
-        {
-            int16_t tmpValue = 0;
-
-            for (int x : motions)
-            {
-                tmpValue += x;
-            }
-            XInput.setJoystickY(JOY_LEFT, tmpValue * 4); //Incrementa velocità
-        }
-
-#endif
-
-#ifdef DEBUG
-        Serial.print("Current activated motion -> ");
-        Serial.print(motions[id]);
-        Serial.print("  ");
-        Serial.print(id);
-        Serial.println();
-#endif
-        lastValue = motions[id]; //Overwrite the new value
-        return true;
     }
+
     else
     {
-        return false;
+        isManageable = false;
     }
+
+    lastValue = motions[id]; //Overwrite the new value
+    return isManageable;
 }
 
 //////////////////////////////////////////////////////
@@ -96,6 +65,20 @@ void XinputMovement::manageMotions(int16_t motion1, int16_t motion2)
 
     isMoving = mot1 && mot2;
 
+    if (isMoving)
+    {
+
+        isMovingCountdown.stop();
+
+        int16_t tmpValue = 0;
+
+        for (int x : motions)
+        {
+            tmpValue += x;
+        }
+        XInput.setJoystickY(JOY_LEFT, tmpValue * 2); //Incrementa velocità
+    }
+
     /*
      *  If it stopped moving, starts a timer and check if it should forcefully stop or not,
      *  so it checks if the countdown is running while isMoving is false
@@ -105,8 +88,10 @@ void XinputMovement::manageMotions(int16_t motion1, int16_t motion2)
         //when it reaches 0, it stops all the movements
         if (isMovingCountdown.update())
         {
+            digitalWrite(17, LOW);
 
             XInput.setJoystickY(JOY_LEFT, 0);
+            digitalWrite(17, HIGH);
         }
     }
     else if (!isMoving && prevIsMoving)

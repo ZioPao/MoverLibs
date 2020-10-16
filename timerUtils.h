@@ -22,6 +22,8 @@ private:
 
 public:
     void start(uint16_t waitingTime);
+    void stop();
     bool update();
     bool getStatus();
+    void setStatus(bool value);
 };

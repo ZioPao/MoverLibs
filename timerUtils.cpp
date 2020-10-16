@@ -36,6 +36,12 @@ void MiniCountdown::start(uint16_t waitingTime)
     this->startTime = millis();
 }
 
+void MiniCountdown::stop(){
+    this->isRunning = false;
+    this->startTime = -1;
+    this -> waitingTime = -1;
+}
+
 /** Updates its status
 * @return boolean which determines whether or not continue
 */
@@ -57,4 +63,8 @@ bool MiniCountdown::update()
 bool MiniCountdown::getStatus()
 {
     return this->isRunning;
+}
+
+void MiniCountdown::setStatus(bool value){
+    this->isRunning = value;
 }

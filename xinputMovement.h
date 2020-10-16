@@ -8,7 +8,8 @@
 #define MIN_Y 300
 #define START_MOVEMENT = MIN_Y
 #define MIN_X 4000
-#define INCREMENT 500 //How much to add when there is a greater motion than the old one
+#define INCREMENT 700 //How much to add when there is a greater motion than the old one
+#define DECREMENT 0
 #define COUNTDOWN_STOP 2000     //2 sec to let it stop completely
 
 
