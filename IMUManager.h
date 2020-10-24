@@ -4,6 +4,8 @@
 
 #define INTERRUPT_PIN 7
 
+//#define IMU_DEBUG
+
 void dmpDataReady();
 
 

@@ -10,6 +10,7 @@
 #define DECREMENT 400
 #define COUNTDOWN_STOP 800     //0.8 sec to let it stop completely
 
+//TODO how should lateral movement work?
 
 /* To test stuff without using the XInput library*/
 //#define DEBUG
