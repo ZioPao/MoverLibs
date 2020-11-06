@@ -8,7 +8,8 @@ XinputMovement::XinputMovement()
 {
 
     XInput.begin();
-    isMoving = false;
+    isMovingForward = false;
+    isMovingLateral = false;
 }
 //////////////////////////////////////////////////////
 //PRIVATE METHODS
@@ -16,10 +17,10 @@ XinputMovement::XinputMovement()
 
 /** Manage movement for a single motion value.
  * @param motion 16 bit value of y axis motion
- * @param id integer to design a single mover
+ * @param direction enum to design a single mover, left or rigth
  * @return True if managed, false if not manageable.
  */
-bool XinputMovement::manageSingleMotion(int16_t motion, uint8_t id)
+bool XinputMovement::manageSingleMotion(int16_t motion, direction id)
 {
     bool isManageable;
     int16_t lastValue = motions[id]; //Last value to compare it to the newest one
@@ -41,13 +42,12 @@ bool XinputMovement::manageSingleMotion(int16_t motion, uint8_t id)
             motions[id] = motions[id] - DECREMENT;
         }
     }
-
     else
     {
         isManageable = false;
     }
 
-    lastValue = motions[id]; //Overwrite the new value
+    lastValue = motions[(int16_t)id]; //Overwrite the new value
     return isManageable;
 }
 
@@ -55,18 +55,25 @@ bool XinputMovement::manageSingleMotion(int16_t motion, uint8_t id)
 //PUBLIC METHODS
 //////////////////////////////////////////////////////
 
-void XinputMovement::manageMotions(int16_t motion1, int16_t motion2)
+void XinputMovement::manageMotions(int16_t leftMotion, int16_t rightMotion)
 {
-    bool prevIsMoving = isMoving;
+    bool prevIsMovingForward = isMovingForward;
+    bool prevIsMovingLateral = isMovingLateral;
+
     //Using a single && line doesn't work, dunno why and I don't care tbh
     bool mot1, mot2;
-    mot1 = manageSingleMotion(motion1, 0);
-    mot2 = manageSingleMotion(motion2, 1);
 
-    isMoving = mot1 && mot2;
+    mot1 = manageSingleMotion(leftMotion, LEFT);
+    mot2 = manageSingleMotion(rightMotion, RIGHT);
 
-    if (isMoving)
+    isMovingForward = mot1 && mot2;
+    isMovingLateral = mot1 ^ mot2; //Only one has to be active
+
+   
+    if (isMovingForward)
     {
+        bool prevIsMoving = isMovingForward;
+
         //if the countdown was active, it'll stop it forcefully
         isMovingCountdown.stop();
 
@@ -75,8 +82,23 @@ void XinputMovement::manageMotions(int16_t motion1, int16_t motion2)
         {
             tmpValue += x;
         }
-        tmpValue *= 2;  //! Non ottimale, principalmente per test
-        XInput.setJoystickY(JOY_LEFT, (uint16_t)tmpValue); 
+        tmpValue *= 2; //! Non ottimale, principalmente per test
+        XInput.setJoystickY(JOY_LEFT, (uint16_t)tmpValue);
+    }
+    else if (isMovingLateral)
+    {
+        isMovingCountdown.stop();
+
+        direction dir;
+        //Keep tapping
+        int16_t tmpValue = 0;
+        //Check which mover is moving
+        mot1 ? dir = LEFT : dir = RIGHT;
+
+        //Set the correct tmpValue
+        dir == LEFT ? tmpValue -= motions[dir] : tmpValue += motions[dir];
+
+        XInput.setJoystickX(JOY_LEFT, (uint16_t)tmpValue);
     }
     else
     {
@@ -90,7 +112,7 @@ void XinputMovement::manageMotions(int16_t motion1, int16_t motion2)
             XInput.setJoystickY(JOY_LEFT, 0);
             digitalWrite(17, HIGH);
         }
-        else if (prevIsMoving)
+        else if (prevIsMovingForward)
         {
             //If it was moving before and now it stopped, start the timer
 
