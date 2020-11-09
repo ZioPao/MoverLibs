@@ -69,7 +69,6 @@ void XinputMovement::manageMotions(int16_t leftMotion, int16_t rightMotion)
     isMovingForward = mot1 && mot2;
     isMovingLateral = mot1 ^ mot2; //Only one has to be active
 
-   
     if (isMovingForward)
     {
         bool prevIsMoving = isMovingForward;
@@ -98,12 +97,28 @@ void XinputMovement::manageMotions(int16_t leftMotion, int16_t rightMotion)
         //Set the correct tmpValue
         dir == LEFT ? tmpValue -= motions[dir] : tmpValue += motions[dir];
 
+        tmpValue *= 2; //! SOLO PER TEST!!!!
+
         XInput.setJoystickX(JOY_LEFT, (uint16_t)tmpValue);
+
+#ifdef DEBUG
+        Serial.print("Moving in this direction -> ");
+        if (dir == LEFT)
+        {
+            Serial.print("Left");
+        }
+        else
+        {
+            Serial.print("Right");
+        }
+        Serial.println();
+#endif
+
     }
     else
     {
         /*
-        *  If it stopped moving, starts a timer and check if it should forcefully stop or not,
+        *  If   \ stopped moving, starts a timer and check if it should forcefully stop or not,
         *  so it checks if the countdown is running while isMoving is false
         */
         if (isMovingCountdown.getStatus())
