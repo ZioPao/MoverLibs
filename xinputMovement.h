@@ -17,7 +17,7 @@
 class XinputMovement
 {
 private:
-    enum direction
+    enum Direction
     {
         LEFT,
         RIGHT
@@ -28,7 +28,13 @@ private:
     MiniCountdown isMovingCountdown;
 
     int16_t motions[2] = {0, 0}; //Declares an array where our values are stored for the Xinput lib to use
-    bool manageSingleMotion(int16_t motion, direction id);
+    bool manageSingleMotion(int16_t motion, Direction id);
+
+    //Specific methods
+
+    void manageForwardMovement();
+    void manageLateralMovement(bool motion1);
+    void manageStopping(bool prevIsMovingForward);
 
 public:
     XinputMovement();
