@@ -20,10 +20,18 @@ private:
     enum Direction
     {
         LEFT,
-        RIGHT
+        RIGHT,
+        FORWARD,
+        GENERIC_LATERAL
     };
+
+    bool motionLeft, motionRight;
+
+
     bool isMovingForward; //Becomes true only when all the movers are in sync and moving
     bool isMovingLateral; //True only when tapping, moves in that direction
+
+    bool prevMotions[4];        //left, right, forw, lateral
 
     MiniCountdown isMovingCountdown;
 
@@ -31,10 +39,9 @@ private:
     bool manageSingleMotion(int16_t motion, Direction id);
 
     //Specific methods
-
     void manageForwardMovement();
-    void manageLateralMovement(bool motion1);
-    void manageStopping(bool prevIsMovingForward);
+    void manageLateralMovement();
+    void manageStopping();
 
 public:
     XinputMovement();
