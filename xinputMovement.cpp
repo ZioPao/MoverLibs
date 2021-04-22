@@ -17,45 +17,67 @@ XinputMovement::XinputMovement()
 
 /** Choose movement for a single motion value.
  * @param motions 16 bit values of y axis motion
- * @return True if managed, false if not manageable.
+ * @return Currently managed motion. Could have value of zero if not managed.
  */
-bool XinputMovement::choseMotion(Motion currentMotions[2])
+Motion XinputMovement::manageCurrentMotion(int16_t leftMotion, int16_t rightMotion)
 {
-    bool isManageable;
-    Direction chosenDirection;
-
     //! it's still overflowing!
     //TODO add upper bound
+    bool isManageable;
+    Direction chosenDirection;
+    Motion currentMotion = Motion(0, Direction::NONE);
 
-    chosenDirection = abs(motionLeft) > abs(motionRight) ? Direction::LEFT : Direction::RIGHT;
+    int16_t leftAbsMotion = abs(leftMotion);
+    int16_t rightAbsMotion = abs(rightMotion);
+    chosenDirection = leftAbsMotion > rightAbsMotion ? Direction::LEFT : Direction::RIGHT;
 
-    //no reason to have multiple managedMotions
-
-    //isMoving becomes true only when both of motions are managed
-    if (currentMotions[chosenDirection].getAbsValue() >= MIN_Y)
+    switch (chosenDirection)
     {
-        isManageable = true;
-       //managedMotion.modifyValue()
-        managedMotion.setDirection(chosenDirection);
+    case LEFT:
+        isManageable = leftAbsMotion >= MIN_Y;
+        break;
+    case RIGHT:
+        isManageable = rightAbsMotion >= MIN_Y;
+        break;
+    }
 
+    if (isManageable)
+    {
+        //Set current motion
+        currentMotion = Motion(chosenDirection == LEFT ? leftMotion : rightMotion, chosenDirection);
 
-        managedMotion[chosenDirection] = currentMotions[chosenDirection].getAbsValue() > prevMotions[chosenDirection].getAbsValue() ? 
-                                            managedMotions[chosenDirection].modifyValue(INCREMENT) : managedMotions[chosenDirection].modifyValue(-DECREMENT)
- 
+        //no reason to have multiple managedMotions
+        for (Motion prevMotion : prevMotions)
+        {
+            //probably slower, but I need clarity at this point
+            if (prevMotion.getDirection() == chosenDirection)
+            {
+                currentMotion.modifyValue(currentMotion.getAbsValue() > prevMotion.getAbsValue() ? INCREMENT : -DECREMENT);
+            }
+        }
     }
     else
     {
-        isManageable = false;
+        return currentMotion;
     }
-
-    return isManageable;
 }
 
-void XinputMovement::checkTimers()
+void XinputMovement::checkTimers(Motion currentMotion)
 {
+    stopMotionCountdown.update(); //continues it
+
+    //Currently running and same direction as current
+    if (stopMotionCountdown.getIsRunning() && (stopMotionCountdown.getDirection() == currentMotion.getDirection())){
+        //do nada
+    }
+    else if (stopMotionCountdown.getHasFinished() && (stopMotionCountdown.getDirection() == currentMotion.getDirection())){
+
+        //block current motion until it doesn't switch to other mover
+    }
+   
+
     //check which mover, check corrisponding timer
 }
-
 
 /** Based on what mover is actually registering a movement, it outputs a forward movement\
  * 
@@ -69,10 +91,7 @@ void XinputMovement::manageForwardMovement()
     //LEFt or RIGHT get registered for a certain amount of time. Let's say 1 full second.
     // After that, if the current motion isn't the opposite, it's basically a full stop
 
-
     //if last mov was left, and countdown has finished... then no more left, so activeMov must be disabled
-
-
 
     for (int dir = LEFT; dir < GENERIC_LATERAL; dir++)
     {
@@ -173,32 +192,29 @@ void XinputMovement::manageStopping()
 //PUBLIC METHODS
 //////////////////////////////////////////////////////
 
-void XinputMovement::manageMotions(Motion motions[2])
+void XinputMovement::manageMotions(int16_t leftMotion, int16_t rightMotion)
 {
     //Previous managed mover
     prevMotions[LEFT] = motionLeft;
-    prevMotions[RIGHT] = motionRight;    
-    
-    
-    if (choseMotion(motions)){
+    prevMotions[RIGHT] = motionRight;
+
+    managedMotion = manageCurrentMotion(leftMotion, rightMotion);
+
+    if (managedMotion.getValue() != 0)
+    {
 
         //use managed motions here
-
-
 
         //Manage everything else
 
         //check timers
         //if left currently ongoing (prevMotion = left and currentMotion = left and timer going), then just keep adding i guess?
         //if left currently ongoing but timer has finished, stop movmvent for left for 1 sec
-        //if left is stopped or not moving anymore, wait for right 
-
-
+        //if left is stopped or not moving anymore, wait for right
     }
 
     //previous motion must be checked HERE. if left is moving and the countdown is on, then left will stay until right is active.
     // if right isn't activated, then previousMotion must be disabled
-
 
     // prevMotions[FORWARD] = isMovingForward;
     // prevMotions[GENERIC_LATERAL] = isMovingLateral;
@@ -209,9 +225,6 @@ void XinputMovement::manageMotions(Motion motions[2])
 
     // motionLeft = manageSingleMotion(leftMotion, LEFT);
     // motionRight = manageSingleMotion(rightMotion, RIGHT);
-   
-
-
 
     //isMovingForward = motionLeft && motionRight;        //that's just wrong
     //isMovingLateral = motionLeft ^ motionRight; //Only one has to be active

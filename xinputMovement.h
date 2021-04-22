@@ -1,6 +1,5 @@
 #include "Arduino.h"
 #include "XInput.h"
-#include "timerUtils.h"
 #include "helperClasses.h"
 
 #define MOVERS_AMOUNT 2 //How many movers are connected
@@ -18,28 +17,26 @@
 class XinputMovement
 {
 private:
-    bool motionLeft, motionRight;
+    //bool motionLeft, motionRight;
 
 
     bool isMovingForward; //Becomes true only when all the movers are in sync and moving
     bool isMovingLateral; //True only when tapping, moves in that direction
 
-    bool prevMotions[4];        //left, right, forw, lateral //todo convert to Motion
+    Motion prevMotions[4];        //left, right, forw, lateral //todo convert to Motion
     //Direction previousMotion;
 
     MiniCountdown isMovingCountdown;
     MiniCountdown currentMotionCountdown;
 
     MiniCountdown stopMotionCountdown;
-    Direction stoppedMovement;
-
-
+    
     //int16_t managedMotions[2] = {0, 0}; //Declares an array where our values are stored for the Xinput lib to use
     Motion managedMotion;
-    bool choseMotion(Motion motions[2]);
+    Motion manageCurrentMotion(int16_t leftMotion, int16_t rightMotion);
 
 
-    void checkTimers();
+    void checkTimers(Motion currentMotion);
     //Specific methods
     void manageForwardMovement();
     void manageLateralMovement();
@@ -47,5 +44,5 @@ private:
 
 public:
     XinputMovement();
-    void manageMotions(Motion motions[2]);           //todo scrap
+    void manageMotions(int16_t leftMotion, int16_t rightMotion);           //todo scrap
 };
