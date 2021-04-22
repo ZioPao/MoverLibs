@@ -9,7 +9,7 @@
 #define INCREMENT 700 //How much to add when there is a greater motion than the old one
 #define DECREMENT 400
 #define COUNTDOWN_STOP 800     //0.8 sec to let it stop completely
-
+#define COUNTDOWN_STOP_SINGLE_MOTION 1000 //1 second
 
 /* To test stuff without using the XInput library*/
 //#define DEBUG
@@ -23,7 +23,7 @@ private:
     bool isMovingForward; //Becomes true only when all the movers are in sync and moving
     bool isMovingLateral; //True only when tapping, moves in that direction
 
-    Motion prevMotions[4];        //left, right, forw, lateral //todo convert to Motion
+    Motion prevMotion;        //left, right, forw, lateral //todo convert to Motion
     //Direction previousMotion;
 
     MiniCountdown isMovingCountdown;
@@ -36,7 +36,12 @@ private:
     Motion manageCurrentMotion(int16_t leftMotion, int16_t rightMotion);
 
 
-    void checkTimers(Motion currentMotion);
+    bool checkTimers();
+
+    //Actual moving
+    void moveForward();
+
+
     //Specific methods
     void manageForwardMovement();
     void manageLateralMovement();

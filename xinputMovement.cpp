@@ -45,98 +45,64 @@ Motion XinputMovement::manageCurrentMotion(int16_t leftMotion, int16_t rightMoti
     {
         //Set current motion
         currentMotion = Motion(chosenDirection == LEFT ? leftMotion : rightMotion, chosenDirection);
-
-        //no reason to have multiple managedMotions
-        for (Motion prevMotion : prevMotions)
-        {
-            //probably slower, but I need clarity at this point
-            if (prevMotion.getDirection() == chosenDirection)
-            {
-                currentMotion.modifyValue(currentMotion.getAbsValue() > prevMotion.getAbsValue() ? INCREMENT : -DECREMENT);
-            }
-        }
+        if (prevMotion.getDirection() == chosenDirection)
+            currentMotion.modifyValue(currentMotion.getAbsValue() > prevMotion.getAbsValue() ? INCREMENT : -DECREMENT);
     }
     else
     {
         return currentMotion;
     }
 }
-
-void XinputMovement::checkTimers(Motion currentMotion)
+/** Checks timers to force disable whatever mover is moving, to flip flop between the two.
+ * @return Wheter or not an action was blocked. True if it was, false if it wasn't
+ */
+bool XinputMovement::checkTimers()
 {
+
+    bool isStopped;
     stopMotionCountdown.update(); //continues it
 
     //Currently running and same direction as current
-    if (stopMotionCountdown.getIsRunning() && (stopMotionCountdown.getDirection() == currentMotion.getDirection())){
-        //do nada
+    if (stopMotionCountdown.getIsRunning() && (stopMotionCountdown.getDirection() == managedMotion.getDirection()))
+    {
+        isStopped = false;
     }
-    else if (stopMotionCountdown.getHasFinished() && (stopMotionCountdown.getDirection() == currentMotion.getDirection())){
+    else if (stopMotionCountdown.getHasFinished() && (stopMotionCountdown.getDirection() == managedMotion.getDirection()))
+    {
 
         //block current motion until it doesn't switch to other mover
-    }
-   
+        managedMotion.setValue(0); //Forces it to go to 0
+        managedMotion.setDirection(Direction::NONE);
 
-    //check which mover, check corrisponding timer
+        isStopped = true;
+    }
+
+    return isStopped;
 }
 
 /** Based on what mover is actually registering a movement, it outputs a forward movement\
- * 
- * 
 */
-void XinputMovement::manageForwardMovement()
+void XinputMovement::moveForward()
 {
 
-    //Starting movement
-
-    //LEFt or RIGHT get registered for a certain amount of time. Let's say 1 full second.
-    // After that, if the current motion isn't the opposite, it's basically a full stop
-
-    //if last mov was left, and countdown has finished... then no more left, so activeMov must be disabled
-
-    for (int dir = LEFT; dir < GENERIC_LATERAL; dir++)
+    if (prevMotion.getDirection() != managedMotion.getDirection())
     {
-
-        //must check if was active anyway... A generic boolean?
-        //if it was moving on the left, and the countdown has ended.... then stop movement and negates LEFT movement for a full second?
-        if (prevMotions[dir])
-        {
-
-            if (currentMotionCountdown.getStatus())
-            {
-            }
-            else
-            {
-                stopMotionCountdown.start(1);
-                stoppedMovement = (Direction)dir;
-            }
-        }
-
-        if (prevMotions[dir] && !currentMotionCountdown.getStatus())
-        {
-        }
-
-        //Need to start the timer for the currentMotion
-        if (prevMotions[dir] && currentMotionCountdown.getStatus())
-        {
-            currentMotionCountdown.start(1); //? sec or ms?
-        }
+        stopMotionCountdown.stop();
+        stopMotionCountdown.reset();
+    }
+    else if (!stopMotionCountdown.getIsRunning())
+    {
+        stopMotionCountdown.start(COUNTDOWN_STOP_SINGLE_MOTION, managedMotion.getDirection());
     }
 
-    if ((prevMotions[LEFT] && prevMotions[RIGHT]) == false)
+    if (prevMotion.getValue() != 0)
     {
-        isMovingCountdown.stop(); //if the countdown was active, it'll stop it forcefully
-        int16_t tmpValue = 0;
 
-        for (int x : motions)
-        {
-            tmpValue += x;
-        }
-
-        tmpValue *= 2; //! Non ottimale, principalmente per test
-        XInput.setJoystickY(JOY_LEFT, (uint16_t)tmpValue);
+        XInput.setJoystickY(JOY_LEFT, managedMotion.getValue() * 2);
     }
 }
 
+/*
 void XinputMovement::manageLateralMovement()
 {
     isMovingCountdown.stop(); //if the countdown was active, it'll stop it forcefully
@@ -167,13 +133,13 @@ void XinputMovement::manageLateralMovement()
     Serial.println();
 #endif
 }
-
-void XinputMovement::manageStopping()
+*/
+/*void XinputMovement::manageStopping()
 {
-    /*
+   
     *  If   \ stopped moving, starts a timer and check if it should forcefully stop or not,
     *  so it checks if the countdown is running while isMoving is false
-    */
+    
     if (isMovingCountdown.getStatus())
     {
         digitalWrite(17, LOW);
@@ -186,7 +152,7 @@ void XinputMovement::manageStopping()
 
         isMovingCountdown.start(COUNTDOWN_STOP);
     }
-}
+}*/
 
 //////////////////////////////////////////////////////
 //PUBLIC METHODS
@@ -194,24 +160,26 @@ void XinputMovement::manageStopping()
 
 void XinputMovement::manageMotions(int16_t leftMotion, int16_t rightMotion)
 {
-    //Previous managed mover
-    prevMotions[LEFT] = motionLeft;
-    prevMotions[RIGHT] = motionRight;
+    //Saves old managedMotion to the right PrevMotion
+    prevMotion.setValue(managedMotion.getValue());
+    prevMotion.setDirection(managedMotion.getDirection());
 
+    //Updates managedMotion
     managedMotion = manageCurrentMotion(leftMotion, rightMotion);
 
-    if (managedMotion.getValue() != 0)
+    if (checkTimers())
     {
-
-        //use managed motions here
-
-        //Manage everything else
-
-        //check timers
-        //if left currently ongoing (prevMotion = left and currentMotion = left and timer going), then just keep adding i guess?
-        //if left currently ongoing but timer has finished, stop movmvent for left for 1 sec
-        //if left is stopped or not moving anymore, wait for right
+        moveForward();
     }
+
+    //use managed motions here
+
+    //Manage everything else
+
+    //check timers
+    //if left currently ongoing (prevMotion = left and currentMotion = left and timer going), then just keep adding i guess?
+    //if left currently ongoing but timer has finished, stop movmvent for left for 1 sec
+    //if left is stopped or not moving anymore, wait for right
 
     //previous motion must be checked HERE. if left is moving and the countdown is on, then left will stay until right is active.
     // if right isn't activated, then previousMotion must be disabled
