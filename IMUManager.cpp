@@ -146,13 +146,16 @@ void IMUManager::MPULoading()
     if (!dmpReady)
         return;
 
+//todo kinda broken
     // wait for MPU interrupt or extra packet(s) available
-    while (!mpuInterrupt && fifoCount < packetSize)
+    /*while (!mpuInterrupt && fifoCount < packetSize)
     {
+        Serial.println("Stuck here 1");
         if (mpuInterrupt && fifoCount < packetSize)
         {
             // try to get out of the infinite loop
             fifoCount = mpu.getFIFOCount();
+            Serial.println("Stuck here 2");
         }
         // other program behavior stuff here
         // .
@@ -164,7 +167,7 @@ void IMUManager::MPULoading()
         // .
         // .
         // .
-    }
+    }*/
 
     // reset interrupt flag and get INT_STATUS byte
     mpuInterrupt = false;

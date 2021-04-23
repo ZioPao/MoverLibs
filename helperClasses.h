@@ -19,8 +19,7 @@ private:
 public:
     Motion(int16_t value, Direction dir);
     Motion();
-    ~Motion();
-
+    
     void setValue(int16_t value);
     void modifyValue(int16_t mod);
     int16_t getValue();

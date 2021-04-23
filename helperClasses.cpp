@@ -1,6 +1,13 @@
 #include "helperClasses.h"
 /** MOTION**/
 
+Motion::Motion(int16_t value, Direction dir){
+    this-> value = value;
+    this->dir = dir;
+}
+
+Motion::Motion(){}
+
 void Motion::setValue(int16_t value)
 {
     this->value = value;
@@ -77,9 +84,9 @@ void MiniCountdown::reset()
 {
     this->isRunning = false;
     this->hasFinished = false;
-    this->waitingTime = NULL;
+    this->waitingTime = -1;
     this->dir = Direction::NONE;
-    this->startTime = NULL;
+    this->startTime = -1;
 }
 /** Updates its status
 * @return boolean which determines whether or not continue
