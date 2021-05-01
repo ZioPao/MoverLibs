@@ -36,4 +36,6 @@ public:
     void setup();
 
     int16_t getRealAcceleration();
+
+    //todo managed gyro stuff.
 };
