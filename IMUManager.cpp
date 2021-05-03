@@ -3,6 +3,7 @@
 // ===               INTERRUPT DETECTION ROUTINE                ===
 // ================================================================
 volatile bool mpuInterrupt = false; // indicates whether MPU interrupt pin has gone high
+
 void dmpDataReady()
 {
     mpuInterrupt = true;
@@ -49,26 +50,7 @@ void IMUManager::setup()
 }
 
 
-int16_t IMUManager::getRealAcceleration()
-{
-    MPULoading();
-    mpu.dmpGetQuaternion(&q, fifoBuffer);
-    mpu.dmpGetAccel(&aa, fifoBuffer);
-    mpu.dmpGetGravity(&gravity, &q);
-    mpu.dmpGetLinearAccel(&aaReal, &aa, &gravity);
-
-    return aaReal.y;
+void IMUManager::getGyroAndAccelValues(VectorInt16* acc, VectorInt16* gyr){
+    mpu.getMotion6(&acc -> x, &acc -> y, &acc -> z, &gyr -> x, &gyr -> y, &gyr -> z);
 }
 
-int16_t IMUManager::getGyroStatus(){
-    //MPULoading();
-    mpu.dmpGetGyro(&aaReal, fifoBuffer);
-
-    return aaReal.y;
-}
-
-int16_t IMUManager::getAccelGyroValues(){
-    mpu.getMotion6(&ax, &ay, &az, &gx, &gy, &gz);
-
-    return ax;
-}

@@ -19,7 +19,7 @@ bool BluetoothLink::checkConnectionMaster()
     //Serial.println(Serial1.available());
     Serial1.flush();
     Serial1.write(1);
-    Serial.println("Waiting for BT connection");
+    //Serial.println("Waiting for BT connection");
   }
 
   //When the loop ends, it checks wheter or not it's a single bit
@@ -40,9 +40,7 @@ bool BluetoothLink::checkConnectionSlave()
 {
   while (Serial1.available() == 0)
   {
-    //Serial.println(Serial1.available());
-
-    Serial.println("Waiting for master");
+    ; //just wait
   }
 
   if (Serial1.available() != 0)
@@ -59,24 +57,48 @@ bool BluetoothLink::checkConnectionSlave()
   }
 }
 
-int16_t BluetoothLink::getData()
+VectorInt16 BluetoothLink::getData(VectorInt16 * acc, VectorInt16 *gyr)
 {
-  int16_t tmp;
-  uint16_t receivedSize = 0;
 
-  if (transfer.available())
+ // Serial.print("Entered getData");
+
+  VectorInt16 tmp;
+  int16_t test;
+  int16_t receivedData;
+
+
+  if (transfer.available() > 12) //todo 12 bytes?
   {
-    receivedSize = transfer.rxObj(tmp, receivedSize);
-    //Serial.println(tmp);
-    return tmp;
+    transfer.rxObj(acc, receivedData);
+
+    // acc -> x = tmp.x;
+    // acc -> y = tmp.y;
+    // acc -> z = tmp.z;
+    
+    //transfer.rxObj(&gyr, 6);
+
+    // gyr -> x = tmp.x;
+    // gyr -> y = tmp.y;
+    // gyr -> z = tmp.z;
   }
 }
 
-void BluetoothLink::sendData(int16_t value)
+void BluetoothLink::sendData(VectorInt16 acc, VectorInt16 gyr)
 {
   uint16_t sendSize = 0;
+  //6 bytes to send a full vector
+  //12 bytes in total for acc and gyr values
 
-  sendSize = transfer.txObj(value, sendSize); //2 bytes
-  transfer.sendData(sendSize);
+  sendSize = transfer.txObj(acc, sendSize); //6 bytes     
+  //sendSize = transfer.txObj(gyr, sendSize);
+  Serial.println();
+  Serial.print(sendSize);
+
+  sendSize = transfer.sendData(sendSize);
+
+  Serial.println();
+  Serial.print("Sent bytes, current bytes ->");
+  Serial.print(sendSize);
+
 }
 

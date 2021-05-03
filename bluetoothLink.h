@@ -1,5 +1,6 @@
 #include "Arduino.h"
 #include "SerialTransfer.h"
+#include "helper_3dmath.h"
 
 class BluetoothLink
 {
@@ -12,6 +13,6 @@ public:
     bool checkConnectionMaster();
     bool checkConnectionSlave();
 
-    int16_t getData();
-    void sendData(int16_t value);
+    VectorInt16 getData(VectorInt16 *acc, VectorInt16* gyr);
+    void sendData(VectorInt16 acc, VectorInt16 gyr);
 };
