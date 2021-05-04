@@ -64,22 +64,23 @@ VectorInt16 BluetoothLink::getData(VectorInt16 * acc, VectorInt16 *gyr)
 
   VectorInt16 tmp;
   int16_t test;
-  int16_t receivedData;
+  int16_t receivedSize;
 
 
-  if (transfer.available() > 12) //todo 12 bytes?
+  if (transfer.available())   //todo force 12 bytes read only
   {
-    transfer.rxObj(acc, receivedData);
-
-    // acc -> x = tmp.x;
-    // acc -> y = tmp.y;
-    // acc -> z = tmp.z;
+    transfer.rxObj(tmp, receivedSize);
     
-    //transfer.rxObj(&gyr, 6);
+    acc -> x = tmp.x;
+    acc -> y = tmp.y;
+    acc -> z = tmp.z;
+    
+    tmp = VectorInt16(0,0,0);  //force reset
+    transfer.rxObj(tmp, receivedSize);
 
-    // gyr -> x = tmp.x;
-    // gyr -> y = tmp.y;
-    // gyr -> z = tmp.z;
+    gyr -> x = tmp.x;
+    gyr -> y = tmp.y;
+    gyr -> z = tmp.z;
   }
 }
 
@@ -90,15 +91,14 @@ void BluetoothLink::sendData(VectorInt16 acc, VectorInt16 gyr)
   //12 bytes in total for acc and gyr values
 
   sendSize = transfer.txObj(acc, sendSize); //6 bytes     
-  //sendSize = transfer.txObj(gyr, sendSize);
-  Serial.println();
-  Serial.print(sendSize);
+  sendSize = transfer.txObj(gyr, sendSize);
+ // Serial.println(sendSize);
 
   sendSize = transfer.sendData(sendSize);
 
-  Serial.println();
-  Serial.print("Sent bytes, current bytes ->");
-  Serial.print(sendSize);
+  // Serial.println();
+  // Serial.print("Sent bytes, current bytes ->");
+  // Serial.print(sendSize);
 
 }
 
