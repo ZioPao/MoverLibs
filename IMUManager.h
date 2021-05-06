@@ -9,7 +9,6 @@
 
 void dmpDataReady();
 
-
 class IMUManager
 {
 private:
@@ -28,6 +27,6 @@ private:
 
 public:
 
-    void setup();
+    void setup(int16_t acc_x_offset, int16_t acc_y_offset, int16_t acc_z_offset, int16_t gyr_x_offset, int16_t gyr_y_offset, int16_t gyr_z_offset);
     void getGyroAndAccelValues(VectorInt16 *acc, VectorInt16 *gyr);
 };

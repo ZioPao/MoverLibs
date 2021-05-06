@@ -42,8 +42,6 @@ THE SOFTWARE.
 
 #ifdef __AVR__
 #include <avr/pgmspace.h>
-#elif defined(ARDUINO_ARCH_SAMD)
-#include <avr/dtostrf.h>
 #else
 //#define PROGMEM /* empty */
 //#define pgm_read_byte(x) (*(x))
@@ -826,8 +824,7 @@ class MPU6050 {
 		void CalibrateAccel(uint8_t Loops = 15);// Fine tune after setting offsets with less Loops.
 		void PID(uint8_t ReadAddress, float kP,float kI, uint8_t Loops);  // Does the math
 		void PrintActiveOffsets(); // See the results of the Calibration
-		void getActiveOffsets(int16_t offsets[6]); // Get the results of the Calibration  
-		void setActiveOffsets(int16_t offsets[6]); // Set offsets
+
 
 
         // special methods for MotionApps 2.0 implementation

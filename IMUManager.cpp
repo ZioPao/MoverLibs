@@ -1,4 +1,5 @@
 #include "IMUManager.h"
+
 // ================================================================
 // ===               INTERRUPT DETECTION ROUTINE                ===
 // ================================================================
@@ -12,7 +13,7 @@ void dmpDataReady()
 // ================================================================
 // ===                         Setup                            ===
 // ================================================================
-void IMUManager::setup()
+void IMUManager::setup(int16_t acc_x_offset, int16_t acc_y_offset, int16_t acc_z_offset, int16_t gyr_x_offset, int16_t gyr_y_offset, int16_t gyr_z_offset)
 {
   // join I2C bus (I2Cdev library doesn't do this automatically)
     #if I2CDEV_IMPLEMENTATION == I2CDEV_ARDUINO_WIRE
@@ -34,19 +35,20 @@ void IMUManager::setup()
     Serial.println("Testing device connections...");
     Serial.println(mpu.testConnection() ? "MPU6050 connection successful" : "MPU6050 connection failed");
 
-    // supply your own gyro offsets here, scaled for min sensitivity
-    mpu.setXGyroOffset(220);
-    mpu.setYGyroOffset(76);
-    mpu.setZGyroOffset(-85);
-    mpu.setZAccelOffset(1788); // 1688 factory default for my test chip
+
+    // offsets
+    mpu.setXAccelOffset(acc_x_offset);
+    mpu.setYAccelOffset(acc_y_offset);
+    mpu.setZAccelOffset(acc_z_offset);
+    
+    mpu.setXGyroOffset(gyr_x_offset);
+    mpu.setYGyroOffset(gyr_y_offset);
+    mpu.setZGyroOffset(gyr_z_offset);
 
     // Calibration Time: generate offsets and calibrate our MPU6050
     mpu.CalibrateAccel(6);
     mpu.CalibrateGyro(6);
-    mpu.PrintActiveOffsets();
     
-
-
 }
 
 
