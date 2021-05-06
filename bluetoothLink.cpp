@@ -2,7 +2,6 @@
 
 BluetoothLink::BluetoothLink()
 {
-  Serial.begin(38400);
   Serial1.begin(38400); // Default communication rate of the Bluetooth module
   transfer.begin(Serial1);
   Serial.println("Avviata comunicazione bluetooth");
